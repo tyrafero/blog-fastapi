@@ -1,5 +1,24 @@
 from pydantic import BaseModel
 
-class Blog(BaseModel):
+class BlogCreate(BaseModel):
     title: str
-    body: str | None = None
+    user_id: int
+
+    class Config:
+        orm_mode = True
+
+class Blog(BlogCreate):
+    id: int
+    
+
+
+class UserCreate(BaseModel):
+    name: str
+
+    class Config:
+        orm_mode = True
+
+class User(UserCreate):
+    id: int
+    
+

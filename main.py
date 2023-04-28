@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
 from database import engine, SessionLocal
@@ -17,13 +17,21 @@ def getdb():
 
 models.Base.metadata.create_all(engine) #migrating
 
-@app.post('/blog', response_model=schemas.Blog)
+@app.get('/blog')
+def all_blogs(db: Session = Depends(getdb)):
+    db_blog = db.query(Blog).all()
+    return db_blog
+
+@app.get('/user')
+def all_users(db: Session = Depends(getdb)):
+    db_blog= db.query(User).all()
+    return db_blog
+
+@app.post('/blog', status_code= status.HTTP_201_CREATED)
 def create_blog(blog: schemas.BlogCreate, db: Session = Depends(getdb)):
-    print("blog create called")
     db_blog = Blog(title=blog.title, user_id = blog.user_id)
     db.add(db_blog)
     db.commit()
-    print("blog committed")
     db.refresh(db_blog)
     return db_blog
 
@@ -48,14 +56,4 @@ def show_user(user_id: int, db: Session = Depends(getdb)):
     db_blog = db.query(User).filter(User.id == user_id).first()
     if not db_blog:
         raise HTTPException(status_code=404, detail='Blog not found')
-    return db_blog
-
-@app.get('/blog')
-def all_blogs(db: Session = Depends(getdb)):
-    db_blog = db.query(Blog).all()
-    return db_blog
-
-@app.get('/user')
-def all_users(db: Session = Depends(getdb)):
-    db_blog= db.query(User).all()
     return db_blog

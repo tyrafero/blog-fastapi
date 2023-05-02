@@ -36,13 +36,21 @@ def create_blog(blog: schemas.BlogCreate, db: Session = Depends(getdb)):
     return db_blog
 
 
-@app.post('/user', response_model=schemas.User)
+@app.post('/user', status_code= status.HTTP_201_CREATED)
 def create_user(user: schemas.UserCreate, db: Session = Depends(getdb)):
     db_user = User(name = user.name)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
+
+@app.delete('/blog/{blog_id}', status_code= status.HTTP_204_NO_CONTENT)
+def destroy(blog_id, db:Session = Depends(getdb)):
+    db_blog = db.query(Blog).filter(Blog.id == blog_id).delete(synchronize_session="evaluate")
+    db.commit()
+    db.refresh(db_blog)
+    return f"{Blog.id} deleted"
+
 
 @app.get('/blog/{blog_id}', response_model=schemas.Blog)
 def show_blog(blog_id: int, db: Session = Depends(getdb)):
@@ -53,7 +61,7 @@ def show_blog(blog_id: int, db: Session = Depends(getdb)):
 
 @app.get('/user/{user_id}', response_model=schemas.User)
 def show_user(user_id: int, db: Session = Depends(getdb)):
-    db_blog = db.query(User).filter(User.id == user_id).first()
-    if not db_blog:
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
         raise HTTPException(status_code=404, detail='Blog not found')
-    return db_blog
+    return db_user
